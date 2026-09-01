@@ -25,16 +25,15 @@ public class AtmFrame extends javax.swing.JFrame {
     private ScreenState currentState;
     private final StringBuilder inputBuffer;
     private String targetAccountNumber;
-    private double pendingAmount;
     private String errorMessage;
-    
+
     // Animation timers & state
     private Timer cardLedTimer;
     private boolean cardLedOn = true;
     private Timer cashAnimationTimer;
     private Timer printAnimationTimer;
     private Timer successTimer;
-    
+
     // Virtual receipt paper component
     private JDialog receiptDialog;
     private JTextArea txtReceiptPaper;
@@ -43,7 +42,7 @@ public class AtmFrame extends javax.swing.JFrame {
         this.atmService = atmService;
         this.inputBuffer = new StringBuilder();
         this.currentState = ScreenState.WELCOME;
-        
+
         // Configura Look and Feel FlatLaf
         try {
             UIManager.setLookAndFeel(new FlatDarkLaf());
@@ -56,7 +55,7 @@ public class AtmFrame extends javax.swing.JFrame {
         setupListeners();
         setupTimers();
         setupKeyboardInterception();
-        
+
         updateScreen();
     }
 
@@ -67,14 +66,14 @@ public class AtmFrame extends javax.swing.JFrame {
         jPanelScreenCenter.setBackground(new Color(11, 18, 28));
         jPanelScreenLeftLabels.setBackground(new Color(11, 18, 28));
         jPanelScreenRightLabels.setBackground(new Color(11, 18, 28));
-        
+
         lblScreenHeader.setForeground(new Color(254, 240, 138)); // Amarelo néon suave
         lblScreenStatus.setForeground(new Color(241, 245, 249)); // Branco suave
         lblScreenInput.setForeground(new Color(56, 189, 248)); // Ciano brilhante
         lblScreenMessage.setForeground(new Color(234, 113, 113)); // Vermelho claro para alertas
-        
+
         // Estilizar os botões físicos laterais
-        JButton[] sideButtons = {btnLeft1, btnLeft2, btnLeft3, btnRight1, btnRight2, btnRight3};
+        JButton[] sideButtons = { btnLeft1, btnLeft2, btnLeft3, btnRight1, btnRight2, btnRight3 };
         for (JButton btn : sideButtons) {
             btn.setBackground(new Color(51, 65, 85)); // Aço cinza escuro
             btn.setForeground(Color.WHITE);
@@ -84,7 +83,7 @@ public class AtmFrame extends javax.swing.JFrame {
         }
 
         // Estilizar teclado numérico
-        JButton[] numericButtons = {btn1, btn2, btn3, btn4, btn5, btn6, btn7, btn8, btn9, btn0, btnBlank, btnC};
+        JButton[] numericButtons = { btn1, btn2, btn3, btn4, btn5, btn6, btn7, btn8, btn9, btn0, btnBlank, btnC };
         for (JButton btn : numericButtons) {
             btn.setFocusPainted(false);
             btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
@@ -102,7 +101,7 @@ public class AtmFrame extends javax.swing.JFrame {
                 btn.setBorder(new LineBorder(new Color(71, 85, 105), 2));
             }
         }
-        
+
         // Estilizar contêineres de periféricos
         cardSlotContainer.setBackground(new Color(18, 27, 38));
         receiptPrinterContainer.setBackground(new Color(18, 27, 38));
@@ -127,7 +126,7 @@ public class AtmFrame extends javax.swing.JFrame {
             }
         });
         cardLedTimer.start();
-        
+
         // Temporizador para dispensar dinheiro
         cashAnimationTimer = new Timer(3000, new ActionListener() {
             @Override
@@ -136,7 +135,7 @@ public class AtmFrame extends javax.swing.JFrame {
                 lblCashDispenserStatus.setText("FECHADO");
                 lblCashDispenserStatus.setForeground(Color.GRAY);
                 cashDispenserContainer.setBackground(new Color(18, 27, 38));
-                
+
                 // Transiciona para tela final
                 currentState = ScreenState.SUCCESS;
                 updateScreen();
@@ -152,17 +151,18 @@ public class AtmFrame extends javax.swing.JFrame {
                 lblPrinterStatus.setText("PRONTA");
                 lblPrinterStatus.setForeground(Color.LIGHT_GRAY);
                 receiptPrinterContainer.setBackground(new Color(18, 27, 38));
-                
+
                 // Mostrar o extrato impresso na tela
                 showVirtualReceipt();
-                
+
                 currentState = ScreenState.SUCCESS;
                 updateScreen();
                 successTimer.start();
             }
         });
 
-        // Temporizador de tela de sucesso (4s e depois volta para o menu ou tela inicial)
+        // Temporizador de tela de sucesso (4s e depois volta para o menu ou tela
+        // inicial)
         successTimer = new Timer(4000, new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -183,7 +183,7 @@ public class AtmFrame extends javax.swing.JFrame {
             if (e.getID() == KeyEvent.KEY_PRESSED) {
                 char keyChar = e.getKeyChar();
                 int keyCode = e.getKeyCode();
-                
+
                 if (Character.isDigit(keyChar)) {
                     handleKeyInput(String.valueOf(keyChar));
                     return true;
@@ -201,7 +201,7 @@ public class AtmFrame extends javax.swing.JFrame {
 
     private void setupListeners() {
         // Configura cliques nos botões numéricos
-        JButton[] numButtons = {btn1, btn2, btn3, btn4, btn5, btn6, btn7, btn8, btn9, btn0};
+        JButton[] numButtons = { btn1, btn2, btn3, btn4, btn5, btn6, btn7, btn8, btn9, btn0 };
         for (JButton btn : numButtons) {
             btn.addActionListener(e -> handleKeyInput(btn.getText()));
         }
@@ -219,7 +219,8 @@ public class AtmFrame extends javax.swing.JFrame {
     }
 
     private void handleKeyInput(String text) {
-        if (isAnimationState()) return;
+        if (isAnimationState())
+            return;
 
         // Limita tamanho do input de acordo com o estado
         if (currentState == ScreenState.WELCOME) {
@@ -230,7 +231,8 @@ public class AtmFrame extends javax.swing.JFrame {
             if (inputBuffer.length() < 4) {
                 inputBuffer.append(text);
             }
-        } else if (currentState == ScreenState.WITHDRAW_CUSTOM || currentState == ScreenState.DEPOSIT_INPUT || currentState == ScreenState.TRANSFER_VALUE) {
+        } else if (currentState == ScreenState.WITHDRAW_CUSTOM || currentState == ScreenState.DEPOSIT_INPUT
+                || currentState == ScreenState.TRANSFER_VALUE) {
             if (inputBuffer.length() < 7) { // Permite até R$ 9.999,99
                 inputBuffer.append(text);
             }
@@ -243,7 +245,8 @@ public class AtmFrame extends javax.swing.JFrame {
     }
 
     private void handleClearOrCancel() {
-        if (isAnimationState()) return;
+        if (isAnimationState())
+            return;
 
         if (inputBuffer.length() > 0) {
             inputBuffer.setLength(inputBuffer.length() - 1);
@@ -289,7 +292,8 @@ public class AtmFrame extends javax.swing.JFrame {
     }
 
     private void handleConfirm() {
-        if (isAnimationState()) return;
+        if (isAnimationState())
+            return;
 
         try {
             switch (currentState) {
@@ -388,7 +392,8 @@ public class AtmFrame extends javax.swing.JFrame {
     }
 
     private void handleSideButton(String btnId) {
-        if (isAnimationState()) return;
+        if (isAnimationState())
+            return;
 
         switch (currentState) {
             case MAIN_MENU:
@@ -440,9 +445,9 @@ public class AtmFrame extends javax.swing.JFrame {
     }
 
     private boolean isAnimationState() {
-        return currentState == ScreenState.ANIMATION_CASH || 
-               currentState == ScreenState.ANIMATION_PRINT || 
-               currentState == ScreenState.ANIMATION_DEPOSIT;
+        return currentState == ScreenState.ANIMATION_CASH ||
+                currentState == ScreenState.ANIMATION_PRINT ||
+                currentState == ScreenState.ANIMATION_DEPOSIT;
     }
 
     private void triggerCashWithdrawal(double val) {
@@ -450,12 +455,12 @@ public class AtmFrame extends javax.swing.JFrame {
             atmService.withdraw(val);
             currentState = ScreenState.ANIMATION_CASH;
             updateScreen();
-            
+
             // Ativa slot físico com luz e indicação de dinheiro
             lblCashDispenserStatus.setText("RETIRE SUAS CÉDULAS");
             lblCashDispenserStatus.setForeground(new Color(50, 255, 50));
             cashDispenserContainer.setBackground(new Color(20, 80, 20)); // Fundo verde iluminado
-            
+
             cashAnimationTimer.start();
         } catch (Exception ex) {
             errorMessage = ex.getMessage().toUpperCase();
@@ -469,7 +474,7 @@ public class AtmFrame extends javax.swing.JFrame {
             atmService.deposit(val);
             currentState = ScreenState.ANIMATION_DEPOSIT;
             updateScreen();
-            
+
             // Simula processando depósito
             Timer depTimer = new Timer(2000, e -> {
                 currentState = ScreenState.SUCCESS;
@@ -488,40 +493,41 @@ public class AtmFrame extends javax.swing.JFrame {
     private void triggerPrintStatement() {
         currentState = ScreenState.ANIMATION_PRINT;
         updateScreen();
-        
+
         lblPrinterStatus.setText("IMPRIMINDO...");
         lblPrinterStatus.setForeground(Color.YELLOW);
         receiptPrinterContainer.setBackground(new Color(80, 80, 20)); // Fundo amarelado iluminado
-        
+
         printAnimationTimer.start();
     }
 
     private void showVirtualReceipt() {
         Account acc = atmService.getCurrentAccount();
-        if (acc == null) return;
-        
+        if (acc == null)
+            return;
+
         StringBuilder sb = new StringBuilder();
         sb.append("========================================\n");
         sb.append("               FIAP BANK                \n");
         sb.append("        COMPROVANTE DE EXTRATO          \n");
         sb.append("========================================\n");
         sb.append("CONTA: ").append(acc.getAccountNumber()).append("\n");
-        sb.append("DATA: ").append(LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"))).append("\n");
+        sb.append("DATA: ").append(LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")))
+                .append("\n");
         sb.append("----------------------------------------\n");
-        
+
         List<Transaction> txs = acc.getTransactions();
         int count = 0;
         // Pega as últimas 5 transações
         for (int i = txs.size() - 1; i >= 0 && count < 5; i--) {
             Transaction tx = txs.get(i);
-            sb.append(String.format("%-12s %-14s %12s\n", 
-                tx.getTimestamp().format(DateTimeFormatter.ofPattern("dd/MM HH:mm")),
-                tx.getType().getDescription(),
-                tx.getAmount().format()
-            ));
+            sb.append(String.format("%-12s %-14s %12s\n",
+                    tx.getTimestamp().format(DateTimeFormatter.ofPattern("dd/MM HH:mm")),
+                    tx.getType().getDescription(),
+                    tx.getAmount().format()));
             count++;
         }
-        
+
         sb.append("----------------------------------------\n");
         sb.append("SALDO ATUAL: ").append(acc.getBalance().format()).append("\n");
         sb.append("========================================\n");
@@ -532,11 +538,11 @@ public class AtmFrame extends javax.swing.JFrame {
         if (receiptDialog != null) {
             receiptDialog.dispose();
         }
-        
+
         receiptDialog = new JDialog(this, "Extrato Impresso", false);
         receiptDialog.setSize(320, 450);
         receiptDialog.setResizable(false);
-        
+
         txtReceiptPaper = new JTextArea();
         txtReceiptPaper.setFont(new Font("Monospaced", Font.PLAIN, 12));
         txtReceiptPaper.setBackground(new Color(250, 250, 245)); // Papel térmico esbranquiçado
@@ -544,14 +550,14 @@ public class AtmFrame extends javax.swing.JFrame {
         txtReceiptPaper.setText(sb.toString());
         txtReceiptPaper.setEditable(false);
         txtReceiptPaper.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-        
+
         JButton btnTearOff = new JButton("Destacar Comprovante");
         btnTearOff.addActionListener(e -> receiptDialog.dispose());
-        
+
         receiptDialog.setLayout(new BorderLayout());
         receiptDialog.add(new JScrollPane(txtReceiptPaper), BorderLayout.CENTER);
         receiptDialog.add(btnTearOff, BorderLayout.SOUTH);
-        
+
         // Posição no lado direito da janela principal
         Point atmPos = this.getLocation();
         receiptDialog.setLocation(atmPos.x + this.getWidth() + 10, atmPos.y + 100);
@@ -567,7 +573,7 @@ public class AtmFrame extends javax.swing.JFrame {
         lblRightOpt2.setText(" ");
         lblRightOpt3.setText(" ");
         lblScreenMessage.setText(" ");
-        
+
         // LED de cartão baseado na autenticação
         if (atmService.isAuthenticated()) {
             lblCardIndicatorLed.setForeground(new Color(80, 80, 250)); // Azul estático - Cartão lido
@@ -594,7 +600,7 @@ public class AtmFrame extends javax.swing.JFrame {
             case ENTER_PIN:
                 lblScreenHeader.setText("--- ATM FIAP BANK ---");
                 lblScreenStatus.setText("INSIRA A SENHA DE 4 DÍGITOS");
-                
+
                 StringBuilder stars = new StringBuilder();
                 for (int i = 0; i < inputBuffer.length(); i++) {
                     stars.append("*");
@@ -609,11 +615,11 @@ public class AtmFrame extends javax.swing.JFrame {
                 lblScreenHeader.setText("--- MENU PRINCIPAL ---");
                 lblScreenStatus.setText("CONTA ATIVA: " + (currentAcc != null ? currentAcc.getAccountNumber() : ""));
                 lblScreenInput.setText("SELECIONE A OPERAÇÃO");
-                
+
                 lblLeftOpt1.setText("> SACAR");
                 lblLeftOpt2.setText("> DEPOSITAR");
                 lblLeftOpt3.setText("> TRANSFERIR");
-                
+
                 lblRightOpt1.setText("SALDO <");
                 lblRightOpt2.setText("EXTRATO <");
                 lblRightOpt3.setText("SAIR <");
@@ -624,11 +630,11 @@ public class AtmFrame extends javax.swing.JFrame {
                 lblScreenHeader.setText("--- REALIZAR SAQUE ---");
                 lblScreenStatus.setText("ESCOLHA O VALOR DO SAQUE");
                 lblScreenInput.setText("");
-                
+
                 lblLeftOpt1.setText("> R$ 20,00");
                 lblLeftOpt2.setText("> R$ 50,00");
                 lblLeftOpt3.setText("> R$ 100,00");
-                
+
                 lblRightOpt1.setText("R$ 200,00 <");
                 lblRightOpt2.setText("R$ 500,00 <");
                 lblRightOpt3.setText("OUTRO VALOR <");
@@ -673,8 +679,11 @@ public class AtmFrame extends javax.swing.JFrame {
                 lblScreenHeader.setText("--- CONSULTA DE SALDO ---");
                 lblScreenStatus.setText("SALDO DISPONÍVEL");
                 lblScreenInput.setText(balanceAcc != null ? balanceAcc.getBalance().format() : "R$ 0,00");
-                lblScreenMessage.setText("Limite Diário Restante: " + 
-                    (balanceAcc != null ? balanceAcc.getDailyWithdrawalLimit().minus(balanceAcc.getTotalWithdrawnToday()).format() : "R$ 0,00"));
+                lblScreenMessage.setText("Limite Diário Restante: " +
+                        (balanceAcc != null
+                                ? balanceAcc.getDailyWithdrawalLimit().minus(balanceAcc.getTotalWithdrawnToday())
+                                        .format()
+                                : "R$ 0,00"));
                 lblRightOpt3.setText("VOLTAR <");
                 btnBlank.setText("");
                 break;
@@ -730,7 +739,8 @@ public class AtmFrame extends javax.swing.JFrame {
         }
     }
 
-    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+    // <editor-fold defaultstate="collapsed" desc="Generated
+    // Code">//GEN-BEGIN:initComponents
     private void initComponents() {
         java.awt.GridBagConstraints gridBagConstraints;
 
@@ -936,7 +946,10 @@ public class AtmFrame extends javax.swing.JFrame {
         jPanelMain.add(jPanelCenterConsole, java.awt.BorderLayout.CENTER);
 
         jPanelBottomConsole.setBackground(new java.awt.Color(13, 20, 31));
-        jPanelBottomConsole.setBorder(javax.swing.BorderFactory.createTitledBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(85, 85, 85), 2), "CONSOLE DO OPERADOR", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Segoe UI", 1, 12), new java.awt.Color(170, 170, 170))); // NOI18N
+        jPanelBottomConsole.setBorder(javax.swing.BorderFactory.createTitledBorder(
+                javax.swing.BorderFactory.createLineBorder(new java.awt.Color(85, 85, 85), 2), "CONSOLE DO OPERADOR",
+                javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION,
+                new java.awt.Font("Segoe UI", 1, 12), new java.awt.Color(170, 170, 170))); // NOI18N
         jPanelBottomConsole.setPreferredSize(new java.awt.Dimension(800, 360));
         jPanelBottomConsole.setLayout(new java.awt.GridLayout(1, 2, 30, 0));
 
@@ -1001,7 +1014,10 @@ public class AtmFrame extends javax.swing.JFrame {
         jPanelPeripherals.setLayout(new java.awt.GridLayout(3, 1, 0, 15));
 
         cardSlotContainer.setBackground(new java.awt.Color(18, 27, 38));
-        cardSlotContainer.setBorder(javax.swing.BorderFactory.createTitledBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(38, 52, 71), 2), "ENTRADA DE CARTÃO", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Segoe UI", 1, 10), new java.awt.Color(153, 153, 153))); // NOI18N
+        cardSlotContainer.setBorder(javax.swing.BorderFactory.createTitledBorder(
+                javax.swing.BorderFactory.createLineBorder(new java.awt.Color(38, 52, 71), 2), "ENTRADA DE CARTÃO",
+                javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION,
+                new java.awt.Font("Segoe UI", 1, 10), new java.awt.Color(153, 153, 153))); // NOI18N
         cardSlotContainer.setLayout(new java.awt.BorderLayout());
 
         lblCardIndicatorLed.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
@@ -1013,7 +1029,10 @@ public class AtmFrame extends javax.swing.JFrame {
         jPanelPeripherals.add(cardSlotContainer);
 
         receiptPrinterContainer.setBackground(new java.awt.Color(18, 27, 38));
-        receiptPrinterContainer.setBorder(javax.swing.BorderFactory.createTitledBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(38, 52, 71), 2), "IMPRESSORA DE EXTRATO", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Segoe UI", 1, 10), new java.awt.Color(153, 153, 153))); // NOI18N
+        receiptPrinterContainer.setBorder(javax.swing.BorderFactory.createTitledBorder(
+                javax.swing.BorderFactory.createLineBorder(new java.awt.Color(38, 52, 71), 2), "IMPRESSORA DE EXTRATO",
+                javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION,
+                new java.awt.Font("Segoe UI", 1, 10), new java.awt.Color(153, 153, 153))); // NOI18N
         receiptPrinterContainer.setLayout(new java.awt.BorderLayout());
 
         lblPrinterStatus.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
@@ -1025,7 +1044,10 @@ public class AtmFrame extends javax.swing.JFrame {
         jPanelPeripherals.add(receiptPrinterContainer);
 
         cashDispenserContainer.setBackground(new java.awt.Color(18, 27, 38));
-        cashDispenserContainer.setBorder(javax.swing.BorderFactory.createTitledBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(38, 52, 71), 2), "DISPENSADOR DE CÉDULAS", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Segoe UI", 1, 10), new java.awt.Color(153, 153, 153))); // NOI18N
+        cashDispenserContainer.setBorder(javax.swing.BorderFactory.createTitledBorder(
+                javax.swing.BorderFactory.createLineBorder(new java.awt.Color(38, 52, 71), 2), "DISPENSADOR DE CÉDULAS",
+                javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION,
+                new java.awt.Font("Segoe UI", 1, 10), new java.awt.Color(153, 153, 153))); // NOI18N
         cashDispenserContainer.setLayout(new java.awt.BorderLayout());
 
         lblCashDispenserStatus.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N

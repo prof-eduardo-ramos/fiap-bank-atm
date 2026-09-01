@@ -2,8 +2,9 @@ package com.fiap.bank.atm.domain.model;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.UUID;
 
-public final class Transaction {
+public final class Transaction extends BaseEntity {
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
 
     private final LocalDateTime timestamp;
@@ -11,15 +12,12 @@ public final class Transaction {
     private final Money amount;
     private final String description;
 
-    public Transaction(TransactionType type, Money amount, String description) {
-        this.timestamp = LocalDateTime.now();
-        this.type = type;
-        this.amount = amount;
-        this.description = description;
+    public Transaction(UUID id, TransactionType type, Money amount, String description) {
+        this(id, LocalDateTime.now(), type, amount, description);
     }
 
-    // For testing/mocking historical transactions
-    public Transaction(LocalDateTime timestamp, TransactionType type, Money amount, String description) {
+    public Transaction(UUID id, LocalDateTime timestamp, TransactionType type, Money amount, String description) {
+        super(id);
         this.timestamp = timestamp;
         this.type = type;
         this.amount = amount;
