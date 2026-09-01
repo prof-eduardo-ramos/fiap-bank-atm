@@ -5,8 +5,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 
-public class Account {
+public class Account extends BaseEntity {
     private static final int MAX_FAILED_ATTEMPTS = 3;
 
     private final String accountNumber;
@@ -18,7 +19,8 @@ public class Account {
     private int failedAttempts;
     private final List<Transaction> transactions;
 
-    public Account(String accountNumber, String pin, Money initialBalance, Money dailyWithdrawalLimit) {
+    public Account(UUID id, String accountNumber, String pin, Money initialBalance, Money dailyWithdrawalLimit) {
+        super(id);
         this.accountNumber = Objects.requireNonNull(accountNumber, "Account number cannot be null");
         this.pin = Objects.requireNonNull(pin, "PIN cannot be null");
         this.balance = Objects.requireNonNull(initialBalance, "Initial balance cannot be null");
@@ -66,9 +68,11 @@ public class Account {
             failedAttempts++;
             if (failedAttempts >= MAX_FAILED_ATTEMPTS) {
                 blocked = true;
-                throw new AccountBlockedException("Conta bloqueada após " + MAX_FAILED_ATTEMPTS + " tentativas incorretas.");
+                throw new AccountBlockedException(
+                        "Conta bloqueada após " + MAX_FAILED_ATTEMPTS + " tentativas incorretas.");
             }
-            throw new InvalidPinException("Senha incorreta. Tentativa " + failedAttempts + " de " + MAX_FAILED_ATTEMPTS + ".");
+            throw new InvalidPinException(
+                    "Senha incorreta. Tentativa " + failedAttempts + " de " + MAX_FAILED_ATTEMPTS + ".");
         }
 
         failedAttempts = 0; // Reset attempts on successful login
@@ -84,19 +88,20 @@ public class Account {
         }
 
         if (amount.isGreaterThan(balance)) {
-            throw new InsufficientFundsException("Saldo insuficiente para realizar o saque. Saldo disponível: " + balance);
+            throw new InsufficientFundsException(
+                    "Saldo insuficiente para realizar o saque. Saldo disponível: " + balance);
         }
 
         Money projectedWithdrawal = totalWithdrawnToday.plus(amount);
         if (projectedWithdrawal.isGreaterThan(dailyWithdrawalLimit)) {
-            throw new DailyLimitExceededException("Limite diário de saque excedido. Limite restante hoje: " 
-                + dailyWithdrawalLimit.minus(totalWithdrawnToday));
+            throw new DailyLimitExceededException("Limite diário de saque excedido. Limite restante hoje: "
+                    + dailyWithdrawalLimit.minus(totalWithdrawnToday));
         }
 
         balance = balance.minus(amount);
         totalWithdrawnToday = totalWithdrawnToday.plus(amount);
-        
-        transactions.add(new Transaction(TransactionType.WITHDRAWAL, amount, "Saque eletrônico"));
+
+        transactions.add(new Transaction(UUID.randomUUID(), TransactionType.WITHDRAWAL, amount, "Saque eletrônico"));
     }
 
     public void deposit(Money amount) {
@@ -109,7 +114,7 @@ public class Account {
         }
 
         balance = balance.plus(amount);
-        transactions.add(new Transaction(TransactionType.DEPOSIT, amount, "Depósito em dinheiro"));
+        transactions.add(new Transaction(UUID.randomUUID(), TransactionType.DEPOSIT, amount, "Depósito em dinheiro"));
     }
 
     public void transfer(Account targetAccount, Money amount) {
@@ -136,10 +141,10 @@ public class Account {
         // Debita a conta de origem
         this.balance = this.balance.minus(amount);
         this.transactions.add(new Transaction(
-            TransactionType.TRANSFER_OUT, 
-            amount, 
-            "Transf. para Conta " + targetAccount.getAccountNumber()
-        ));
+                UUID.randomUUID(),
+                TransactionType.TRANSFER_OUT,
+                amount,
+                "Transf. para Conta " + targetAccount.getAccountNumber()));
 
         // Credita a conta de destino
         targetAccount.receiveTransfer(this, amount);
@@ -148,10 +153,10 @@ public class Account {
     private void receiveTransfer(Account sourceAccount, Money amount) {
         this.balance = this.balance.plus(amount);
         this.transactions.add(new Transaction(
-            TransactionType.TRANSFER_IN, 
-            amount, 
-            "Transf. de Conta " + sourceAccount.getAccountNumber()
-        ));
+                UUID.randomUUID(),
+                TransactionType.TRANSFER_IN,
+                amount,
+                "Transf. de Conta " + sourceAccount.getAccountNumber()));
     }
 
     // Helper for seeding transactions
