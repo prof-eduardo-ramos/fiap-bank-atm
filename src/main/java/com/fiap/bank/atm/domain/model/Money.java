@@ -12,7 +12,7 @@ public final class Money {
     private final BigDecimal amount;
 
     private Money(BigDecimal amount) {
-        this.amount = amount.setScale(2, BigDecimal.ROUND_HALF_EVEN);
+        this.amount = amount.setScale(2);
     }
 
     public static Money of(double amount) {
@@ -60,8 +60,10 @@ public final class Money {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
         Money money = (Money) o;
         return amount.compareTo(money.amount) == 0;
     }
