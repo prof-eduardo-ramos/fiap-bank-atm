@@ -8,7 +8,6 @@ import com.fiap.bank.atm.domain.repository.AccountRepository;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 import java.util.UUID;
 
 public class InMemoryAccountRepository implements AccountRepository {
@@ -51,10 +50,10 @@ public class InMemoryAccountRepository implements AccountRepository {
         }
 
         @Override
-        public Optional<Account> findByAccountNumber(String accountNumber) {
+        public Account findByAccountNumber(String accountNumber) {
                 // Return a reference (or clone, but reference works for state updates in memory
                 // repository)
-                return Optional.ofNullable(accounts.get(accountNumber));
+                return accounts.get(accountNumber);
         }
 
         @Override

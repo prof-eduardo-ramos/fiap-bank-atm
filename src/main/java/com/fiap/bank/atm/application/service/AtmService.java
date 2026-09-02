@@ -17,13 +17,12 @@ public class AtmService {
     }
 
     public Account authenticate(String accountNumber, String pin) {
-        Optional<Account> accountOpt = accountRepository.findByAccountNumber(accountNumber);
-        
-        if (accountOpt.isEmpty()) {
+        Account account = accountRepository.findByAccountNumber(accountNumber);
+
+        if (account == null) {
             throw new InvalidPinException("Conta não encontrada.");
         }
 
-        Account account = accountOpt.get();
         try {
             account.authenticate(pin);
             currentAccount = account;
@@ -48,15 +47,13 @@ public class AtmService {
 
     public void transfer(String targetAccountNumber, double amount) {
         ensureAuthenticated();
-        
-        Optional<Account> targetOpt = accountRepository.findByAccountNumber(targetAccountNumber);
-        if (targetOpt.isEmpty()) {
+
+        Account targetAccount = accountRepository.findByAccountNumber(targetAccountNumber);
+        if (targetAccount == null) {
             throw new IllegalArgumentException("Conta de destino não encontrada.");
         }
-
-        Account targetAccount = targetOpt.get();
         currentAccount.transfer(targetAccount, Money.of(amount));
-        
+
         accountRepository.save(currentAccount);
         accountRepository.save(targetAccount);
     }
