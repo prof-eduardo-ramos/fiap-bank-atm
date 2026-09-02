@@ -6,7 +6,6 @@ import com.fiap.bank.atm.domain.model.Money;
 import com.fiap.bank.atm.domain.model.Transaction;
 import com.fiap.bank.atm.domain.repository.AccountRepository;
 import java.util.List;
-import java.util.Optional;
 
 public class AtmService {
     private final AccountRepository accountRepository;
